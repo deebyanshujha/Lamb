@@ -1,6 +1,5 @@
-package com.lambinterpreter.lamb;
+/*package com.lambinterpreter.lamb;
 import com.lambinterpreter.lamb.*;
-
 public class AstPrinter implements Expr.Visitor<String>{
     String print(Expr expr){
         return expr.accept(this); //ast object
@@ -53,3 +52,5 @@ public class AstPrinter implements Expr.Visitor<String>{
 //     System.out.println(new AstPrinter().print(expression));
 //   }
 }
+
+ */

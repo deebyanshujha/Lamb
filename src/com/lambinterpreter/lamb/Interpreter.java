@@ -21,6 +21,18 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         stmt.accept(this);
     }
 
+    void executeBlock(List<Stmt> statements, Environment environment){
+        Environment previous = this.environment;
+        try{
+            this.environment = environment;
+            for(Stmt statement: statements){
+                execute(statement);
+            }
+        }finally{
+            this.environment = previous;
+        }
+    }
+
     private String stringify(Object object){
         if(object == null) return "nil";
 
@@ -33,6 +45,30 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         }
 
         return object.toString();
+    }
+
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt){
+        while(isTruthy(evaluate(stmt.condition))){
+            execute(stmt.body);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitIfStmt(Stmt.If stmt){
+        if(isTruthy(evaluate(stmt.condition))){
+            execute(stmt.thenBranch);
+        }else if(stmt.elseBranch != null){
+            execute(stmt.elseBranch);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt){
+        executeBlock(stmt.statements, new Environment(environment));
+        return null;
     }
 
     @Override
@@ -58,6 +94,19 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
 
         environment.define(stmt.name.lexeme, value);
         return null;
+    }
+
+    @Override
+    public Object visitLogicalExpr(Expr.Logical expr){
+        Object left = evaluate(expr);
+
+        if(expr.operator.type == TokenType.OR){
+            if(isTruthy(left)) return left;
+        }else{
+            if(!isTruthy(left)) return left; // for and short circuit
+        }
+
+        return evaluate(expr.right);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.lambinterpreter.lamb;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import com.lambinterpreter.lamb.Expr.Binary;
 import static com.lambinterpreter.lamb.TokenType.*;
 
@@ -17,15 +18,105 @@ class Parser {
     List<Stmt> parse(){
         List<Stmt> statements = new ArrayList<>();
         while(!isAtEnd()){
-            statements.add(statement());
+            statements.add(declaration());
         }
         return statements;
     }
 
     private Stmt statement(){
+        if(match(FOR)) return forStatement();
+        if(match(IF)) return ifStatement();
         if(match(PRINT)) return printStatement();
-
+        if(match(WHILE)) return whileStatement();
+        if(match(LEFT_BRACE)) return new Stmt.Block(block());
         return expressionStatement();
+    }
+    /*
+    {
+    var i = 0;
+    while (i < 10) {
+        print i;
+        i = i + 1;
+    }
+    }
+    */
+    private Stmt forStatement(){ // converting for to while.
+        consume(LEFT_PAREN, "Expect '(' after for.");
+        Stmt initializer;
+        if(match(SEMICOLON)){
+            initializer = null;
+        }else if(match(VAR)){
+            initializer = varDeclaration();
+        }else{
+            initializer = expressionStatement();
+        }
+
+        Expr condition = null;
+        if(!check(SEMICOLON)){
+            condition = expression();
+        }
+        consume(SEMICOLON, "Expect ';' after loop condition.");
+
+        Expr increment = null;
+        if(!check(RIGHT_PAREN)){
+            increment = expression();
+        }
+        consume(RIGHT_PAREN,"Expect ')' after for clause.");
+
+        Stmt body = statement();
+
+        if(increment != null){
+            body = new Stmt.Block(
+                Arrays.asList(
+                    body,
+                    new Stmt.Expression(increment)
+                )
+            );
+        }
+
+        if(condition == null) condition = new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+
+        if(initializer != null){
+            body = new Stmt.Block(Arrays.asList(initializer, body));
+        }
+
+        return body;
+    }
+
+    private Stmt whileStatement(){
+        consume(LEFT_PAREN, "Expect '(' after 'while'. ");
+        Expr condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after 'while' condition.");
+
+        Stmt body = statement();
+
+        return new Stmt.While(condition, body);
+    }
+
+    private Stmt ifStatement(){
+        consume(LEFT_PAREN,"Expect '(' after 'if' .");
+        Expr condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after if condition .");
+
+        Stmt thenBranch = statement();
+        Stmt elseBranch = null;
+        if(match(ELSE)){
+            elseBranch = statement();
+        }
+
+        return new Stmt.If(condition, thenBranch, elseBranch);
+    }
+    
+    private List<Stmt> block() {
+        List<Stmt> statements = new ArrayList<>();
+
+        while(!check(RIGHT_BRACE) && !isAtEnd()){
+            statements.add(declaration());
+        }
+
+        consume(RIGHT_BRACE, "Expect '}' after block.");
+        return statements;
     }
 
     private Stmt printStatement(){
@@ -68,7 +159,7 @@ class Parser {
     // IDENTIFIER(x) = expr()
 
     private Expr assignment(){
-        Expr expr = equality();
+        Expr expr = or();
 
         if(match(EQUAL)){
             Token equals = previous();
@@ -85,6 +176,28 @@ class Parser {
         return expr;
     }
 
+    private Expr or(){
+        Expr expr = and();
+
+        while(match(OR)){
+            Token  operator = previous();
+            Expr right = expression();
+            expr = new Expr.Logical(expr,operator,right);
+        }
+        return expr;
+    }
+
+    private Expr and(){
+        Expr expr = equality();
+
+        while(match(AND)){
+            Token operator = previous();
+            Expr right = expression();
+            expr = new Expr.Logical(expr, operator, right);
+        }
+        return expr;
+    }
+
     // equality → comparison ( ( "!=" | "==" ) comparison )* ;
 
     private Expr equality(){
@@ -97,39 +210,6 @@ class Parser {
         }
 
         return expr;
-    }
-
-    private boolean match(TokenType... types){
-        for(TokenType type : types){
-            if(check(type)){
-                advance();
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean check(TokenType type){
-        if(isAtEnd()) return false;
-        return peek().type == type;
-    }
-
-    private boolean isAtEnd(){
-        return peek().type == EOF;
-    }
-
-    private Token peek(){
-        return tokens.get(current);
-    }
-
-    private Token advance(){
-        if(!isAtEnd()) current++;
-        return previous();
-    }
-
-    private Token previous(){
-        return tokens.get(current - 1);
     }
 
     // comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -204,6 +284,40 @@ class Parser {
         }
         
         throw error(peek() ,"expect expression.");
+    }
+
+
+        private boolean match(TokenType... types){
+        for(TokenType type : types){
+            if(check(type)){
+                advance();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean check(TokenType type){
+        if(isAtEnd()) return false;
+        return peek().type == type;
+    }
+
+    private boolean isAtEnd(){
+        return peek().type == EOF;
+    }
+
+    private Token peek(){
+        return tokens.get(current);
+    }
+
+    private Token advance(){
+        if(!isAtEnd()) current++;
+        return previous();
+    }
+
+    private Token previous(){
+        return tokens.get(current - 1);
     }
 
     private Token consume(TokenType type, String message){

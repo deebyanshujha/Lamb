@@ -1916,3 +1916,288 @@ Output displayed on screen
 - Interpreter State → information remembered by the interpreter.
 - Variables exist because the interpreter maintains state.
 - Most useful statements create side effects.
+
+
+# Nested Scopes and Environment Chaining
+
+## Problem with a Single Environment
+
+Using one global environment works until blocks are introduced.
+
+Example:
+
+```lox
+var volume = 100;
+
+{
+    var volume = 50;
+    print volume;
+}
+
+print volume;
+```
+
+Expected Output:
+
+```text
+50
+100
+```
+
+With a single environment:
+
+```text
+{ volume -> 100 }
+
+↓ declare inner volume
+
+{ volume -> 50 }
+```
+
+The outer variable is overwritten and lost.
+
+---
+
+## Shadowing
+
+When a local variable has the same name as a variable in an enclosing scope, the local variable **shadows** the outer one.
+
+Example:
+
+```lox
+var x = "global";
+
+{
+    var x = "local";
+    print x;
+}
+
+print x;
+```
+
+Output:
+
+```text
+local
+global
+```
+
+Inside the block, the local `x` hides the global `x`.
+
+---
+
+## Solution: One Environment per Scope
+
+Instead of one giant environment:
+
+```text
+Environment
+{
+    global -> "outside"
+    local  -> "inside"
+}
+```
+
+Create a new environment for every scope.
+
+```text
+Global Environment
+{
+    global -> "outside"
+}
+
+Block Environment
+{
+    local -> "inside"
+}
+```
+
+---
+
+## Environment Chaining
+
+Each environment stores a reference to its enclosing environment.
+
+```java
+class Environment {
+    final Environment enclosing;
+}
+```
+
+Visualized:
+
+```text
+Block Environment
+{
+    local -> "inside"
+}
+      |
+      v
+Global Environment
+{
+    global -> "outside"
+}
+```
+
+---
+
+## Variable Lookup
+
+Example:
+
+```lox
+var global = "outside";
+
+{
+    var local = "inside";
+    print global + local;
+}
+```
+
+Lookup Process:
+
+```text
+Need local
+↓
+Found in current environment
+
+Need global
+↓
+Not found in current environment
+↓
+Check enclosing environment
+↓
+Found
+```
+
+---
+
+## Lookup Algorithm
+
+```java
+Object get(Token name) {
+    if (values.containsKey(name.lexeme)) {
+        return values.get(name.lexeme);
+    }
+
+    if (enclosing != null) {
+        return enclosing.get(name);
+    }
+
+    throw new RuntimeError(...);
+}
+```
+
+Search starts from the innermost scope and moves outward.
+
+---
+
+## Why Shadowing Works
+
+Example:
+
+```lox
+var x = "global";
+
+{
+    var x = "local";
+    print x;
+}
+```
+
+Lookup starts in:
+
+```text
+Block Environment
+{
+    x -> "local"
+}
+```
+
+Variable found immediately.
+
+The global environment is never checked.
+
+Thus the local variable shadows the outer one automatically.
+
+---
+
+## Entering a Block
+
+Before:
+
+```text
+currentEnvironment
+      ↓
+Global
+```
+
+Enter block:
+
+```java
+environment =
+    new Environment(environment);
+```
+
+After:
+
+```text
+currentEnvironment
+      ↓
+Block
+      ↓
+Global
+```
+
+---
+
+## Exiting a Block
+
+Leave block:
+
+```java
+environment =
+    environment.enclosing;
+```
+
+After:
+
+```text
+currentEnvironment
+      ↓
+Global
+```
+
+The block environment becomes unreachable and can be garbage collected.
+
+---
+
+## Cactus Stack
+
+Over the lifetime of a program:
+
+```text
+Global
+  |
+  +-- Block A
+  |      |
+  |      +-- Block B
+  |
+  +-- Block C
+```
+
+Only one path is active at a time.
+
+This structure is called a **Cactus Stack** (or parent-pointer tree).
+
+---
+
+## Key Takeaways
+
+- One scope = One Environment.
+- Each Environment points to its enclosing Environment.
+- Variable lookup starts from the current scope and walks outward.
+- Local variables shadow outer variables.
+- Entering a block creates a new Environment.
+- Exiting a block restores the previous Environment.
+- Environment chaining is the foundation for lexical scoping.
