@@ -2201,3 +2201,338 @@ This structure is called a **Cactus Stack** (or parent-pointer tree).
 - Entering a block creates a new Environment.
 - Exiting a block restores the previous Environment.
 - Environment chaining is the foundation for lexical scoping.
+
+# Functions & Native Functions (Crafting Interpreters)
+
+## Why Functions?
+
+Functions let us:
+- Reuse code
+- Organize logic
+- Call code from multiple places
+- Support recursion
+
+---
+
+## Function Call Flow
+
+```lox
+add(1, 2);
+```
+
+1. Evaluate callee (`add`)
+2. Evaluate arguments (`1`, `2`)
+3. Check callee is callable
+4. Check argument count (arity)
+5. Execute function body
+6. Return result
+
+---
+
+## LoxCallable Interface
+
+All callable objects implement:
+
+```java
+interface LoxCallable {
+    int arity();
+    Object call(Interpreter interpreter,
+                List<Object> arguments);
+}
+```
+
+### Purpose
+
+- `arity()` → number of expected arguments
+- `call()` → executes the function
+
+This allows the interpreter to treat:
+- User-defined functions
+- Native functions
+- Classes (later)
+
+uniformly.
+
+---
+
+## Evaluating Call Expressions
+
+```java
+visitCallExpr()
+```
+
+Steps:
+
+1. Evaluate callee
+2. Evaluate arguments
+3. Verify callee is a `LoxCallable`
+4. Verify arity matches
+5. Invoke:
+
+```java
+function.call(this, arguments);
+```
+
+---
+
+## Native Functions
+
+### Definition
+
+Functions callable from Lox but implemented in Java.
+
+Example:
+
+```lox
+clock();
+```
+
+Implementation exists in Java, not Lox.
+
+---
+
+## Why Native Functions?
+
+Some features require OS/runtime access:
+
+- Time
+- Files
+- Networking
+- Random numbers
+- Graphics
+
+These cannot be implemented purely in Lox.
+
+---
+
+## clock()
+
+Added as first native function.
+
+```lox
+var start = clock();
+
+/* work */
+
+print clock() - start;
+```
+
+Used for benchmarking.
+
+---
+
+## Registering Native Functions
+
+Inside Interpreter constructor:
+
+```java
+globals.define("clock", ...);
+```
+
+This inserts `clock` into the global environment.
+
+So users can call:
+
+```lox
+print clock();
+```
+
+without defining it themselves.
+
+---
+
+## FFI (Foreign Function Interface)
+
+FFI = system allowing a language to call code written in another language.
+
+Examples:
+
+- Python → C
+- Java → C/C++ (JNI)
+- JavaScript → C++ (Node APIs)
+
+### Difference
+
+Native Function:
+- Single built-in foreign function.
+
+FFI:
+- Full mechanism for users to create/import foreign functions.
+
+jlox:
+- Has native functions.
+- Does NOT implement a full FFI.
+
+---
+
+## Key Idea
+
+Every callable thing in Lox is represented by:
+
+```java
+LoxCallable
+```
+
+and is executed through:
+
+```java
+call(...)
+```
+
+Whether it's:
+- a native function,
+- a user-defined function,
+- or later, a class constructor.
+
+
+# LoxCallable Notes
+
+## What is LoxCallable?
+
+`LoxCallable` is an interface representing anything that can be called with `()` in Lox.
+
+```java
+interface LoxCallable {
+    int arity();
+    Object call(Interpreter interpreter,
+                List<Object> arguments);
+}
+```
+
+Examples:
+- Native functions (`clock`)
+- User-defined functions (`fun greet() {}`)
+
+---
+
+## Native Function Example
+
+```java
+globals.define("clock", new LoxCallable() {
+    @Override
+    public int arity() {
+        return 0;
+    }
+
+    @Override
+    public Object call(Interpreter interpreter,
+                       List<Object> arguments) {
+        return (double) System.currentTimeMillis() / 1000.0;
+    }
+});
+```
+
+This creates an anonymous object implementing `LoxCallable`.
+
+Environment:
+
+```text
+"clock" -> LoxCallable object
+```
+
+---
+
+## How `clock()` Executes
+
+Lox code:
+
+```lox
+clock();
+```
+
+AST:
+
+```text
+Call
+├── callee: Variable(clock)
+└── arguments: []
+```
+
+Interpreter:
+
+```java
+Object callee = evaluate(expr.callee);
+```
+
+`expr.callee` is the variable `clock`.
+
+Evaluating it:
+
+```java
+environment.get("clock")
+```
+
+returns:
+
+```text
+LoxCallable object
+```
+
+---
+
+## instanceof Check
+
+```java
+if (!(callee instanceof LoxCallable)) {
+    throw new RuntimeError(...);
+}
+```
+
+Meaning:
+
+> If the evaluated value is NOT callable, throw an error.
+
+Examples:
+
+```lox
+clock();   // valid
+```
+
+```text
+callee -> LoxCallable object
+```
+
+```lox
+123();     // invalid
+```
+
+```text
+callee -> Double
+```
+
+---
+
+## First-Class Functions
+
+Functions are stored as values just like numbers and strings.
+
+```text
+globals
+├── x     -> 10
+├── name  -> "Dee"
+└── clock -> LoxCallable object
+```
+
+Evaluating a variable returns its stored value.
+
+```lox
+x
+```
+
+returns:
+
+```text
+10
+```
+
+```lox
+clock
+```
+
+returns:
+
+```text
+LoxCallable object
+```
+
+Then `()` invokes its `call()` method.
