@@ -1,11 +1,27 @@
 var a = "global";
 
-{
-    fun showA() {
-        print a;
-    }
 
-    showA();
-    var a = "block";
-    showA();
+fun show() {
+    print a;
 }
+
+show();
+a = "gloabl911";
+show();
+
+var a = "xyz";
+show();
+
+fun show(x) {
+    var b = "babu";
+    print x+"bobsy" + 420 + b;
+}
+
+{
+    show(a);
+    var a = 220;
+    show(a);
+}
+
+var a = "xxx";
+show(a);

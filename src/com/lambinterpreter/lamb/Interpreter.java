@@ -55,6 +55,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         }
     }
 
+
+
     private String stringify(Object object){
         if(object == null) return "nil";
 
@@ -70,6 +72,22 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     }
 
     @Override
+    public Void visitClassStmt(Stmt.Class stmt){
+        environment.define(stmt.name.lexeme, null);
+
+        Map<String, LambFunction> methods = new HashMap<>();
+
+        for(Stmt.Function method : stmt.methods){
+            LambFunction function = new LambFunction(method, environment, method.name.lexeme.equals("init"));
+            methods.put(method.name.lexeme, function);
+        }
+
+        LambClass klass = new LambClass(stmt.name.lexeme, methods);
+        environment.assign(stmt.name, klass);
+        return null;
+    }
+
+    @Override
     public Void visitReturnStmt(Stmt.Return stmt){
         Object value = null;
         if(stmt.value != null) value = evaluate(stmt.value);
@@ -79,7 +97,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt){
-        LambFunction function = new LambFunction(stmt, environment);
+        LambFunction function = new LambFunction(stmt, environment, false);
         environment.define(stmt.name.lexeme, function);
         return null;
     }
@@ -102,6 +120,35 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
             throw new RuntimeError(expr.paren, "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
         }
         return function.call(this, arguments);
+    }
+
+    @Override
+    public Object visitThisExpr(Expr.This expr){
+        return lookUpVariable(expr.keyword, expr);
+    }
+
+    @Override
+    public Object visitGetExpr(Expr.Get expr){
+        Object object = evaluate(expr.object);
+
+        if(object instanceof LambInstance){
+            return ((LambInstance) object).get(expr.name);
+        }
+        
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    @Override
+    public Object visitSetExpr(Expr.Set expr){
+        Object object = evaluate(expr.object);
+
+        if(!(object instanceof LambInstance)){
+            throw new RuntimeError(expr.name, "Only instances have fields");
+        }
+
+        Object value = evaluate(expr.value);
+        ((LambInstance)object).set(expr.name, value);
+        return value;
     }
 
     @Override
@@ -174,22 +221,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     private Object lookUpVariable(Token name, Expr expr){
         Integer distance = locals.get(expr);
         if(distance != null){
-            return getAt(distance, name);
+            return environment.getAt(distance, name.lexeme);
         }else{
             return globals.get(name);
         }
-    }
-
-    Object getAt(int distance, Token name){
-        return ancestor(distance).get(name);
-    }
-
-    Environment ancestor(int distance){
-        Environment environment = this.environment;
-        for(int i = 0; i < distance; i++){
-            environment = environment.enclosing;
-        }
-        return environment;
     }
 
     @Override
@@ -198,16 +233,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         
         Integer distance = locals.get(expr);
         if(distance != null){
-            assignAt(distance, expr.name, value);
+            environment.assignAt(distance, expr.name.lexeme, value);
         }else{
             globals.assign(expr.name, value);
         }
 
         return value;
-    }
-
-    void assignAt(int distance , Token name, Object value){
-        ancestor(distance).assign(name, value);
     }
     
     @Override
