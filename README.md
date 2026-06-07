@@ -16,8 +16,6 @@
 <p>
   <a href="#quick-start"><strong>Quick Start</strong></a>
   |
-  <a href="docs/index.html"><strong>Documentation</strong></a>
-  |
   <a href="https://deebyanshujha.github.io/docs-lamb/"><strong>Hosted Docs</strong></a>
   |
   <a href="#language-tour"><strong>Language Tour</strong></a>
