@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="lamb.png" alt="Lamb logo" width="160">
+
 # Lamb Interpreter
 
 ### A handwritten Java interpreter for a small, expressive, dynamically typed language.
