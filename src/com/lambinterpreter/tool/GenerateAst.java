@@ -24,7 +24,8 @@ public class GenerateAst {
             "Logical : Expr left, Token operator, Expr right",
             "Get : Expr object, Token name",
             "Set : Expr object , Token name , Expr value",
-            "This : Token keyword"
+            "This : Token keyword",
+            "Super : Token keyword, Token method"
         ));
         /*  program        → declaration* EOF ;
             declaration    → varDecl  | statement ;

@@ -5,16 +5,22 @@ import java.util.Map;
 
 class LambClass implements LambCallable{
     final String name;
+    final LambClass superclass;
     private final Map<String, LambFunction> methods;
 
-    LambClass(String name, Map<String, LambFunction> methods){
+    LambClass(String name, LambClass superclass, Map<String, LambFunction> methods){
         this.name = name;
+        this.superclass = superclass;
         this.methods = methods;
     }
 
     LambFunction findMethod(String name){
         if(methods.containsKey(name)){
             return methods.get(name);
+        }
+
+        if(superclass != null){
+            return superclass.findMethod(name);
         }
         return null;
     }

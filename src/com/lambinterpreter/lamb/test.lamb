@@ -8,5 +8,16 @@ class hello{
     }
 }
 
-var temp = hello("deebyanshu");
+class byebye < hello{
+    init(name){
+        this.name = name;
+        super.init(name);
+    }
+    printName(){
+        super.printName();
+        print "bye bye" + this.name;
+    }
+}
+
+var temp = byebye("deebyanshu");
 temp.printName();
