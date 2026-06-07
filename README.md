@@ -16,6 +16,10 @@
 <p>
   <a href="#quick-start"><strong>Quick Start</strong></a>
   |
+  <a href="docs/index.html"><strong>Documentation</strong></a>
+  |
+  <a href="https://deebyanshujha.github.io/docs-lamb/"><strong>Hosted Docs</strong></a>
+  |
   <a href="#language-tour"><strong>Language Tour</strong></a>
   |
   <a href="#architecture"><strong>Architecture</strong></a>
@@ -123,14 +127,14 @@ Ada writes Lamb
 
 **Core behavior**
 
-| Area | Support |
-| --- | --- |
-| Values | `nil`, booleans, numbers, strings, functions, classes, instances. |
-| Expressions | Arithmetic, comparison, equality, unary operators, calls, property access. |
-| State | Variables, assignment, block scopes, object fields. |
-| Functions | First-class functions, closures, arity checks, `return`. |
-| Classes | Constructors through `init`, inheritance with `<`, `this`, `super`. |
-| Control flow | `if`, `else`, `while`, parser-lowered `for`, `print`. |
+| Area         | Support                                                                    |
+| ------------ | -------------------------------------------------------------------------- |
+| Values       | `nil`, booleans, numbers, strings, functions, classes, instances.          |
+| Expressions  | Arithmetic, comparison, equality, unary operators, calls, property access. |
+| State        | Variables, assignment, block scopes, object fields.                        |
+| Functions    | First-class functions, closures, arity checks, `return`.                   |
+| Classes      | Constructors through `init`, inheritance with `<`, `this`, `super`.        |
+| Control flow | `if`, `else`, `while`, parser-lowered `for`, `print`.                      |
 
 ---
 
@@ -146,14 +150,14 @@ flowchart LR
     F --> G["Output / Runtime Error"]
 ```
 
-| Component | Responsibility |
-| --- | --- |
-| `Scanner` | Converts source characters into tokens and handles comments, literals, identifiers, and keywords. |
-| `Parser` | Builds `Expr` and `Stmt` trees with recursive descent and operator precedence. |
-| `Expr` / `Stmt` | Generated AST node families using the visitor pattern. |
-| `Resolver` | Performs lexical analysis before execution and records scope depth. |
-| `Interpreter` | Walks the AST, evaluates expressions, executes statements, and reports runtime errors. |
-| Runtime objects | `Environment`, `LambFunction`, `LambClass`, `LambInstance`, `LambCallable`, `Return`. |
+| Component       | Responsibility                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------- |
+| `Scanner`       | Converts source characters into tokens and handles comments, literals, identifiers, and keywords. |
+| `Parser`        | Builds `Expr` and `Stmt` trees with recursive descent and operator precedence.                    |
+| `Expr` / `Stmt` | Generated AST node families using the visitor pattern.                                            |
+| `Resolver`      | Performs lexical analysis before execution and records scope depth.                               |
+| `Interpreter`   | Walks the AST, evaluates expressions, executes statements, and reports runtime errors.            |
+| Runtime objects | `Environment`, `LambFunction`, `LambClass`, `LambInstance`, `LambCallable`, `Return`.             |
 
 ---
 
