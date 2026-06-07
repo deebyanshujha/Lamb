@@ -37,9 +37,9 @@ closures, classes, inheritance, fields, methods, `this`, `super`, and a native
 
 ## What Lamb Is
 
-Lamb is a Java implementation of a Lox-style tree-walk interpreter. It is small
-enough to study end to end, but rich enough to demonstrate the important ideas
-behind language implementation:
+Lamb is a Java implementation of a small tree-walk scripting language. It is
+small enough to study end to end, but rich enough to demonstrate the important
+ideas behind language implementation:
 
 - Lexical analysis with a scanner.
 - Recursive descent parsing with operator precedence.
