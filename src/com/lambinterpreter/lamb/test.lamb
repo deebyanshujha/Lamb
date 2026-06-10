@@ -1,15 +1,2 @@
-for(var i = 0 ; i < 6; i = i + 1){
-    if(i == 4){
-        break;
-    }else if(i == 2){
-        continue;
-    }else{
-        print i;
-    }
-}
-
-~*
-This is a block comment.
-Nothing here is executed.
-Multiple lines are allowed.
-*~
+var name = input("enter name: ");
+print name;

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     final Environment globals = new Environment();
     private Environment environment = globals;
@@ -23,6 +24,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
             @Override
             public String toString() {return "<native fn>";}
         });
+
+        globals.define("input", new InputFunction());
     }
 
     void interpret(List<Stmt> statements){
@@ -57,7 +60,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
 
 
 
-    private String stringify(Object object){
+    String stringify(Object object){
         if(object == null) return "nil";
 
         if(object instanceof Double){
@@ -143,7 +146,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         }
 
         LambCallable function = (LambCallable)callee;
-        if(arguments.size() != function.arity()){
+        if(function.arity() != -1 && arguments.size() != function.arity()){
             throw new RuntimeError(expr.paren, "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
         }
         return function.call(this, arguments);
