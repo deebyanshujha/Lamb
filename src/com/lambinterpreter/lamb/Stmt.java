@@ -13,6 +13,8 @@ abstract class Stmt{
         R visitFunctionStmt(Function stmt);
         R visitReturnStmt(Return stmt);
         R visitClassStmt(Class stmt);
+        R visitBreakStmt(Break stmt);
+        R visitContinueStmt(Continue stmt);
     }
     static class Expression extends Stmt{
         Expression(Expr expression) {
@@ -147,6 +149,32 @@ abstract class Stmt{
         final Token name;
         final Expr.Variable superclass;
         final List<Stmt.Function> methods;
+    }
+
+    static class Break extends Stmt{
+        Break(Token keyword) {
+            this.keyword = keyword;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+                return visitor.visitBreakStmt(this);
+         }
+
+        final Token keyword;
+    }
+
+    static class Continue extends Stmt{
+        Continue(Token keyword) {
+            this.keyword = keyword;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+                return visitor.visitContinueStmt(this);
+         }
+
+        final Token keyword;
     }
 
     abstract <R> R accept(Visitor<R> visitor);

@@ -1,23 +1,15 @@
-class hello{
-    init(name){
-        this.name = name;
-    }
-
-    printName(){
-        print this.name;
-    }
-}
-
-class byebye < hello{
-    init(name){
-        this.name = name;
-        super.init(name);
-    }
-    printName(){
-        super.printName();
-        print "bye bye" + this.name;
+for(var i = 0 ; i < 6; i = i + 1){
+    if(i == 4){
+        break;
+    }else if(i == 2){
+        continue;
+    }else{
+        print i;
     }
 }
 
-var temp = byebye("deebyanshu");
-temp.printName();
+~*
+This is a block comment.
+Nothing here is executed.
+Multiple lines are allowed.
+*~

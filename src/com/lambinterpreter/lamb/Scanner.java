@@ -33,6 +33,8 @@ public class Scanner {
     keywords.put("true",   TRUE);
     keywords.put("var",    VAR);
     keywords.put("while",  WHILE);
+    keywords.put("break", BREAK);
+    keywords.put("continue", CONTINUE);
   }
 
     Scanner(String source){
@@ -90,6 +92,15 @@ public class Scanner {
                 line++; break;
             case '"' : 
                 string(); break;
+            case '~':
+                if(match('~')){
+                    while(peek() != '\n' && !isAtEnd()) advance();
+                }else if(match('*')){
+                    blockComment();
+                }else{
+                    Lamb.error(line, "Unexpected character '~' .");
+                }
+                break;
             default : 
                 if(isDigit(c)){
                     number();
@@ -180,5 +191,23 @@ public class Scanner {
     private void addToken(TokenType type, Object literal){
         String text = source.substring(start, current);
         tokens.add(new Token(type, text, literal, line));
+    }
+
+    private void blockComment(){
+        while(!isAtEnd()){
+            if(peek() == '*' && peekNext() == '~'){
+                advance();
+                advance();
+                return;
+            }
+
+            if(peek() == '\n'){
+                line++;
+            } 
+
+            advance();
+        }
+
+        Lamb.error(line, "Undetermine block comment.");
     }
 }

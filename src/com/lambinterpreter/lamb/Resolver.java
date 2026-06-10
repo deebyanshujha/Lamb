@@ -8,6 +8,7 @@ import java.util.Stack;
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     private final Interpreter interpreter;
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
+    private int loopDepth = 0;
 
     Resolver(Interpreter interpreter){
         this.interpreter = interpreter;
@@ -221,7 +222,28 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     @Override
     public Void visitWhileStmt(Stmt.While stmt){
         resolver(stmt.condition);
+
+        loopDepth++;
         resolve(stmt.body);
+        loopDepth--;
+
+        return null;
+    }
+
+    @Override
+    public Void visitBreakStmt(Stmt.Break stmt){
+        if(loopDepth == 0){
+            Lamb.error(stmt.keyword, "Cannot use 'break' outside of a loop.");
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitContinueStmt(Stmt.Continue stmt){
+        if(loopDepth == 0){
+            Lamb.error(stmt.keyword, "Cannot use 'continue' outside of loop.");
+        }
         return null;
     }
 

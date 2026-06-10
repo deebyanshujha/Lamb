@@ -72,6 +72,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     }
 
     @Override
+    public Void visitBreakStmt(Stmt.Break stmt){
+        throw new BreakException();
+    }
+
+    @Override
+    public Void visitContinueStmt(Stmt.Continue stmt){
+        throw new ContinueException();
+    }
+
+    @Override
     public Void visitClassStmt(Stmt.Class stmt){
         Object superclass = null;
         if(stmt.superclass != null){
@@ -183,7 +193,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     @Override
     public Void visitWhileStmt(Stmt.While stmt){
         while(isTruthy(evaluate(stmt.condition))){
-            execute(stmt.body);
+            try{
+                execute(stmt.body);
+            }catch(ContinueException e){
+                continue;
+            }catch(BreakException e){
+                break;
+            }
         }
         return null;
     }
