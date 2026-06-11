@@ -1,4 +1,3 @@
-print clock();
-var x = "hello";
-print x;
-print clock();
+~~countSheep(8);
+print __SHEPHERD__;
+print __LAMB__;

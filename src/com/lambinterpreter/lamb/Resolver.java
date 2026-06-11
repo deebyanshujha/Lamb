@@ -30,7 +30,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
 
     private static final Set<String> BUILTINS = Set.of(
         "clock",
-        "input"
+        "input",
+        "countSheep",
+        "__SHEPHERD__",
+        "__LAMB__"
     );
 
 

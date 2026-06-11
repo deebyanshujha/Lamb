@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.lang.System;
+import java.lang.Thread;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     final Environment globals = new Environment();
@@ -26,6 +27,42 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         });
 
         globals.define("input", new InputFunction());
+
+        globals.define("countSheep", new LambCallable(){
+            @Override
+            public int arity(){
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments){
+                Object arg = arguments.get(0);
+
+                if(!(arg instanceof Double)){
+                    throw new RuntimeError(null, "CountSheep() expects a number.");
+                }
+
+                int n = ((Double) arg).intValue();
+                try{
+                    for(int i = 1; i <= n; i++){
+                        System.out.println("🐑 "+ i + " sheep");
+                        Thread.sleep(1000);
+                    }
+                }catch(InterruptedException e){
+                    Thread.currentThread().interrupt();
+                }
+
+                return null;
+            }
+
+            @Override
+            public String toString(){
+                return "<native fn>";
+            }
+        });
+
+        globals.define("__SHEPHERD__", "Deebyanshu Jha, Keeper of the Flock");
+        globals.define("__LAMB__", "Lamb v0.1");
     }
 
     void interpret(List<Stmt> statements){
