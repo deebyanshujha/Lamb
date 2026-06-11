@@ -3,6 +3,7 @@ package com.lambinterpreter.lamb;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
@@ -26,6 +27,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
         CLASS,
         SUBCLASS
     }
+
+    private static final Set<String> BUILTINS = Set.of(
+        "clock",
+        "input"
+    );
+
 
     private FunctionType currentFunction = FunctionType.NONE;
     private ClassType currentClass = ClassType.NONE;
@@ -101,6 +108,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
 
     @Override
     public Void visitVarStmt(Stmt.Var stmt){
+        if(BUILTINS.contains(stmt.name.lexeme)){
+            Lamb.error(stmt.name , "'" + stmt.name.lexeme + "' is a reserved builtin name.");
+        }
         declare(stmt.name);
         if(stmt.initializer != null){
             resolver(stmt.initializer);
@@ -176,6 +186,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt){
+        if(BUILTINS.contains(stmt.name.lexeme)){
+            Lamb.error(stmt.name,"'" + stmt.name.lexeme +"' is a reserved builtin name.");
+        }
+
         declare(stmt.name);
         define(stmt.name);
 
