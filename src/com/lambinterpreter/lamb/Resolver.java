@@ -267,8 +267,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     @Override
     public Void visitReturnStmt(Stmt.Return stmt){
         
-        if(currentFunction != FunctionType.FUNCTION){
-            Lamb.error(stmt.keyword, "can't return from top-level code.");
+        if(currentFunction == FunctionType.NONE){
+            Lamb.error(stmt.keyword, "Can't return from top-level code.");
         }
 
         if(stmt.value != null){
